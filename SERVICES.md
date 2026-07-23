@@ -243,6 +243,27 @@ the library was created as wrong content type — delete and recreate as `tvshow
 > **Critical:** This is a standalone Raspberry Pi, not managed by Proxmox.
 > If it goes offline, DNS fails for all LAN clients.
 
+### opencode (VM 104) — `192.168.1.51`
+
+| Service      | Port  | Type         | Details                              |
+| :----------- | :---- | :----------- | :----------------------------------- |
+| opencode     | —     | CLI          | AI agent (v1.18.4, Node.js 22)       |
+| SSH          | 22    | SSH          | Key-based auth only (ED25519)        |
+
+#### Access
+- **SSH:** `ssh -i ~/.ssh/homelab_ubuntu_docker nkhan3@192.168.1.51`
+- **HomeLab repo:** `/home/nkhan3/HomeLab/` — synced from GitHub (`noman-nkhl/HomeLab`)
+- **opencode config:** `/home/nkhan3/.config/opencode/` — 7 skills, opencode.jsonc
+- **Secrets:** `.env` + `SECRETS.md` copied to `/home/nkhan3/HomeLab/`
+
+> Cloned from VM 9000 template (Ubuntu 24.04 cloud-init). Disk: 8GB local-lvm.
+> Git push/pull via GitHub PAT (stored in `~/.git-credentials`).
+
+#### Bootstrap (New Windows PC)
+Run `HomeLab/setup-opencode.ps1` on any new Windows machine to install
+opencode + clone repo + restore config in minutes. Requires manual restore of
+SSH keys, `.env`, and `SECRETS.md` from backup.
+
 ---
 
 ## Dependency Chain (Boot Order)
@@ -253,8 +274,9 @@ Power On
        ├─► Proxmox Host (1.200)       — boots VMs
        │    ├─► TrueNAS (1.218) VM100 — ZFS pool online, shares exported
        │    ├─► Debian13 (1.133) VM102— OFFLINE (NFS hang, services migrated to VM 103)
-       │    └─► ubuntu-docker (1.50) VM103 — Docker + Jellyfin + ARR Stack
-       │         └─► Mount /mnt/truenas from TrueNAS (manual: sudo mount /mnt/truenas)
+       │    ├─► ubuntu-docker (1.50) VM103 — Docker + Jellyfin + ARR Stack
+       │    │    └─► Mount /mnt/truenas from TrueNAS (manual: sudo mount /mnt/truenas)
+       │    └─► opencode (1.51) VM104 — AI agent CLI, Git synced with GitHub
        └─► Raspberry Pi (1.238)       — Pi-hole DNS / ad blocking
 ```
 

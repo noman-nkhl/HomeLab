@@ -12,6 +12,7 @@ Last Updated: 2026-07-23
 | 192.168.1.218   | truenas      | TrueNAS (VM 100)  | NAS / Storage     |
 | 192.168.1.133   | Debian13     | Debian13 (VM 102) | Offline (NFS issue)|
 | 192.168.1.50    | ubuntu-docker| ubuntu-docker (103)| Docker, Jellyfin, ARR Stack|
+| 192.168.1.51    | opencode     | opencode (VM 104)   | opencode AI agent CLI      |
 | 192.168.1.238   | —            | Raspberry Pi      | Pi-hole DNS       |
 
 ---
@@ -287,6 +288,48 @@ No SDN Zones or VNets are configured (empty from API).
 
 > SSH: `ssh -i ~/.ssh/homelab_ubuntu_docker nkhan3@192.168.1.50`
 > Password in `.env` / `SECRETS.md`
+
+---
+### VM 104 — opencode (AI Agent CLI)
+
+| Field             | Value                                                    |
+| :---------------- | :------------------------------------------------------- |
+| **Status**        | Running                                                  |
+| **IP**            | 192.168.1.51 (static)                                    |
+| **OS**            | Ubuntu 24.04 LTS (cloned from VM 9000 template)          |
+| **vCPU**          | 1 core (`x86-64-v2-AES`), 1 socket                       |
+| **RAM**           | 2 GiB (max 2 GiB)                                        |
+| **Boot**          | `order=scsi0`                                            |
+| **SCSI H/W**      | `virtio-scsi-single`                                     |
+| **QEMU Agent**    | Enabled                                                   |
+| **On Boot**       | Yes                                                       |
+
+#### Disks
+| Slot   | Volume                         | Size      |
+| :----- | :----------------------------- | :-------- |
+| scsi0  | `local-lvm:vm-104-disk-0`      | 8 GiB     |
+
+#### Network
+| Slot  | MAC               | Bridge  | Firewall |
+| :---- | :---------------- | :------ | :------- |
+| net0  | BC:24:11:3F:5E:F1 | vmbr0   | No       |
+
+#### Services
+| Service   | Type             | Port  | Status                     |
+| :-------- | :--------------- | :---- | :------------------------- |
+| opencode  | AI agent CLI     | —     | v1.18.4, Node.js 22        |
+| SSH       | Remote access    | 22    | Key-based auth only        |
+
+#### Credentials
+| User   | SSH Key                                     |
+| :----- | :------------------------------------------ |
+| nkhan3 | `~/.ssh/homelab_ubuntu_docker` (ED25519)    |
+
+> SSH: `ssh -i ~/.ssh/homelab_ubuntu_docker nkhan3@192.168.1.51`
+> Password in `.env` / `SECRETS.md`
+> Cloned from VM 9000 (Ubuntu 24.04 cloud-init template), disk resized to 8GB.
+> HomeLab repo at `/home/nkhan3/HomeLab/` — synced from GitHub.
+> opencode config at `/home/nkhan3/.config/opencode/`.
 
 ---
 

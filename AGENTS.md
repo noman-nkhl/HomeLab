@@ -14,6 +14,7 @@ before making any changes.
 | **TrueNAS SCALE** | 192.168.1.218   | `https://192.168.1.218`      |
 | **Debian13**      | 192.168.1.133   | Offline — NFS mount hang         |
 | **ubuntu-docker** | 192.168.1.50    | `https://192.168.1.50:9443`  |
+| **opencode**      | 192.168.1.51    | `ssh nkhan3@192.168.1.51`   |
 | **Traefik**       | 192.168.1.50    | `https://traefik.nkhl.co.uk` |
 | **Pi-hole**       | 192.168.1.238   | `http://192.168.1.238/admin` |
 |                    | Raspberry Pi    | Separate physical device      |
@@ -129,6 +130,7 @@ HomeLab/
 | 100  | TrueNAS  | SCALE 25.10.3.1 | 2    | 8GB  | 192.168.1.218   | NAS / Storage   |
 | 102  | Debian13 | Debian 13       | 2    | 2GB  | 192.168.1.133   | OFFLINE (NFS hang)        |
 | 103  | ubuntu-docker | Ubuntu 24.04 | 8 | 12GB | 192.168.1.50    | Docker, Jellyfin, ARR, Portainer |
+| 104  | opencode | Ubuntu 24.04    | 1    | 2GB  | 192.168.1.51    | opencode AI agent (always-on access) |
 
 **VM 101 (OpenWRT) has been removed** — routing is via ISP gateway at 192.168.1.1.
 
