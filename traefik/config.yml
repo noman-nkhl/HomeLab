@@ -1,0 +1,153 @@
+http:
+  serversTransports:
+    insecure:
+      insecureSkipVerify: true
+
+  routers:
+    portainer:
+      rule: "Host(`portainer.nkhl.co.uk`)"
+      entryPoints: ["websecure"]
+      service: portainer
+      tls:
+        certResolver: letsencrypt
+    openbao:
+      rule: "Host(`openbao.nkhl.co.uk`)"
+      entryPoints: ["websecure"]
+      service: openbao
+      tls:
+        certResolver: letsencrypt
+    code-server:
+      rule: "Host(`code.nkhl.co.uk`)"
+      entryPoints: ["websecure"]
+      service: code-server
+      tls:
+        certResolver: letsencrypt
+    sabnzbd:
+      rule: "Host(`sabnzbd.nkhl.co.uk`)"
+      entryPoints: ["websecure"]
+      service: sabnzbd
+      tls:
+        certResolver: letsencrypt
+    prowlarr:
+      rule: "Host(`prowlarr.nkhl.co.uk`)"
+      entryPoints: ["websecure"]
+      service: prowlarr
+      tls:
+        certResolver: letsencrypt
+    sonarr:
+      rule: "Host(`sonarr.nkhl.co.uk`)"
+      entryPoints: ["websecure"]
+      service: sonarr
+      tls:
+        certResolver: letsencrypt
+    radarr:
+      rule: "Host(`radarr.nkhl.co.uk`)"
+      entryPoints: ["websecure"]
+      service: radarr
+      tls:
+        certResolver: letsencrypt
+    jellyseerr:
+      rule: "Host(`jellyseerr.nkhl.co.uk`)"
+      entryPoints: ["websecure"]
+      service: jellyseerr
+      tls:
+        certResolver: letsencrypt
+    bazarr:
+      rule: "Host(`bazarr.nkhl.co.uk`)"
+      entryPoints: ["websecure"]
+      service: bazarr
+      tls:
+        certResolver: letsencrypt
+    jellyfin:
+      rule: "Host(`jellyfin.nkhl.co.uk`)"
+      entryPoints: ["websecure"]
+      service: jellyfin
+      tls:
+        certResolver: letsencrypt
+    truenas:
+      rule: "Host(`truenas.nkhl.co.uk`)"
+      entryPoints: ["websecure"]
+      service: truenas
+      tls:
+        certResolver: letsencrypt
+    proxmox:
+      rule: "Host(`proxmox.nkhl.co.uk`)"
+      entryPoints: ["websecure"]
+      service: proxmox
+      tls:
+        certResolver: letsencrypt
+    pihole:
+      rule: "Host(`pihole.nkhl.co.uk`)"
+      entryPoints: ["websecure"]
+      service: pihole
+      tls:
+        certResolver: letsencrypt
+    traefik-dashboard:
+      rule: "Host(`traefik.nkhl.co.uk`)"
+      entryPoints: ["websecure"]
+      service: api@internal
+      middlewares: ["auth"]
+      tls:
+        certResolver: letsencrypt
+
+  middlewares:
+    auth:
+      basicAuth:
+        usersFile: /htpasswd
+
+  services:
+    portainer:
+      loadBalancer:
+        servers:
+          - url: "https://host.docker.internal:9443"
+        serversTransport: insecure
+    openbao:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8200"
+    code-server:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8443"
+    sabnzbd:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8080"
+    prowlarr:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:9696"
+    sonarr:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8989"
+    radarr:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:7878"
+    jellyseerr:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:5055"
+    bazarr:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:6767"
+    jellyfin:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8096"
+    truenas:
+      loadBalancer:
+        servers:
+          - url: "https://192.168.1.218:443"
+        serversTransport: insecure
+    proxmox:
+      loadBalancer:
+        servers:
+          - url: "https://192.168.1.200:8006"
+        serversTransport: insecure
+    pihole:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.238:80"

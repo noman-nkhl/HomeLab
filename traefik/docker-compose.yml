@@ -1,0 +1,23 @@
+services:
+  traefik:
+    image: traefik:3.2
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file:
+      - .env
+    volumes:
+      - ./traefik.yml:/traefik.yml:ro
+      - ./config.yml:/config.yml:ro
+      - ./letsencrypt:/letsencrypt
+      - ./htpasswd:/htpasswd:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - traefik_net
+
+networks:
+  traefik_net:
+    driver: bridge

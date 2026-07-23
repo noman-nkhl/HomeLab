@@ -1,0 +1,13 @@
+.env
+.env.local
+*.log
+
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform/
+.terraform.lock.hcl
+
+# Secrets
+SECRETS.md
