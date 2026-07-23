@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@opencode-ai/plugin": "1.18.3",
+    "@zenobius/opencode-skillful": "^1.2.5"
+  }
+}
