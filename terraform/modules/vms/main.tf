@@ -68,11 +68,11 @@ resource "proxmox_virtual_environment_vm" "debian13" {
 
   cpu {
     cores = 2
-    type  = "x86-64-v2-AES"
+    type  = "host"
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 6144
   }
 
   disk {

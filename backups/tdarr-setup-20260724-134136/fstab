@@ -1,0 +1,4 @@
+LABEL=cloudimg-rootfs	/	 ext4	discard,commit=30,errors=remount-ro	0 1
+LABEL=BOOT	/boot	ext4	defaults	0 2
+LABEL=UEFI	/boot/efi	vfat	umask=0077	0 1
+192.168.1.218:/mnt/WD_10TB /mnt/truenas nfs defaults,nofail,hard,intr 0 0

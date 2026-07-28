@@ -1,5 +1,5 @@
 # Homelab Infrastructure Overview
-Last Updated: 2026-07-23
+Last Updated: 2026-07-24
 
 ---
 
@@ -10,7 +10,7 @@ Last Updated: 2026-07-23
 | 192.168.1.1     | —            | ISP Router        | Gateway, DHCP, NAT|
 | 192.168.1.200   | local        | Proxmox Host      | Hypervisor        |
 | 192.168.1.218   | truenas      | TrueNAS (VM 100)  | NAS / Storage     |
-| 192.168.1.133   | Debian13     | Debian13 (VM 102) | Offline (NFS issue)|
+| 192.168.1.133   | Debian13     | Debian13 (VM 102) | General purpose  |
 | 192.168.1.50    | ubuntu-docker| ubuntu-docker (103)| Docker, Jellyfin, ARR Stack|
 | 192.168.1.51    | opencode     | opencode (VM 104)   | opencode AI agent CLI      |
 | 192.168.1.238   | —            | Raspberry Pi      | Pi-hole DNS       |
@@ -112,6 +112,7 @@ Last Updated: 2026-07-23
 | `WD_10TB/TV`       | `/mnt/WD_10TB/TV`       | 96 KiB   | 8.95 TiB| May 31, 2026       |
 
 > All datasets inherit LZ4 compression, atime=OFF, aclmode=DISCARD, acltype=POSIX.
+> **Actual media usage (2026-07-24):** ~3.2 TB (Anime 1.2T, Movies 813G, Shows 1.2T, TV ~0)
 
 #### TrueNAS User Accounts (non-builtin)
 
@@ -205,24 +206,25 @@ No SDN Zones or VNets are configured (empty from API).
 
 ---
 
-### VM 102 — Debian13 (Offline)
+### VM 102 — Debian13
 | Field             | Value                                                    |
 | :---------------- | :------------------------------------------------------- |
-| **Status**        | Stopped (NFS kernel hang on boot)                        |
+| **Status**        | Running                                                  |
 | **IP**            | 192.168.1.133 (DHCP)                                     |
-| **OS**            | Debian 13                                                |
-| **Access**         | SSH: `nkhan` (password in SECRETS.md) — non-functional  |
-| **vCPU**          | 2 cores (`x86-64-v2-AES`), 1 socket                      |
-| **RAM**           | 2 GiB (max 2 GiB)                                        |
+| **OS**            | Debian 13 (Trixie)                                       |
+| **Access**         | SSH: `nkhan` (password in SECRETS.md)                   |
+| **vCPU**          | 2 cores (`host`), 1 socket                               |
+| **RAM**           | 6 GiB (max 6 GiB)                                        |
 | **Boot**          | `order=scsi0;ide2;net0`                                  |
 | **SCSI H/W**      | `virtio-scsi-single`                                     |
-| **QEMU Agent**    | Enabled (`agent=1`)                                      |
+| **QEMU Agent**    | Enabled (`agent=1`), v10.0.8                             |
 | **VMGenID**       | `c7419524-0167-4896-abff-11c3f0fe9a79`                   |
 
-> **Status (2026-07-20):** VM is offline due to a hung NFS mount in `/etc/fstab`
-> that blocks boot. Jellyfin has been migrated to ubuntu-docker (VM 103).
-> To recover: boot into GRUB recovery with `init=/bin/bash`, comment out the NFS
-> line in `/etc/fstab`, reboot, then optionally fix the NFS mount.
+> **Recovered (2026-07-26):** VM was offline due to NFS mount hang in `/etc/fstab`
+> + a PCI passthrough conflict (GPU `0000:0b:00.0` was accidentally configured on
+> both VM 102 and VM 103). Fixed by removing GPU passthrough from VM 102 and
+> commenting out the NFS line in `/etc/fstab`. All services were previously
+> migrated to ubuntu-docker (VM 103) on 2026-07-20.
 
 #### Disks
 | Slot   | Volume                            | Size      |
@@ -248,6 +250,8 @@ No SDN Zones or VNets are configured (empty from API).
 | **Boot**          | `order=scsi0`                                            |
 | **SCSI H/W**      | `virtio-scsi-single`                                     |
 | **QEMU Agent**    | Enabled — running (`agent=1`)                            |
+| **Firmware**      | OVMF (UEFI) — converted from SeaBIOS 2026-07-24          |
+| **GPU**           | Intel Arc A310 (DG2) — PCI passthrough `0000:0b:00.0`    |
 | **VMGenID**       | `b455f2bd-70b0-4a66-9b84-73a4bede755b`                   |
 
 #### Disks
@@ -280,6 +284,7 @@ No SDN Zones or VNets are configured (empty from API).
 | Bazarr    | Subtitle manager | 6767  | Running (linuxserver)      |
 | Jellyfin  | Media server     | 8096  | Running (lscr.io/linuxserver/jellyfin) |
 | Glances   | System monitoring| 61208 | Running (nicolargo)        |
+| Tdarr     | Media transcoding| 8265  | Running (haveagitgat, GPU)  |
 
 #### Credentials
 | User   | SSH Key                                     |

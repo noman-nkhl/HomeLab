@@ -1,0 +1,187 @@
+services:
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    restart: unless-stopped
+    environment:
+    - PUID=1000
+    - PGID=1000
+    - TZ=America/Chicago
+    volumes:
+    - ./config/sabnzbd:/config
+    - /mnt/truenas:/data:rshared
+    ports:
+    - 8080:8080
+    networks:
+    - arr_network
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.sabnzbd.rule=Host(`sabnzbd.nkhl.co.uk`)
+    - traefik.http.routers.sabnzbd.entrypoints=websecure
+    - traefik.http.routers.sabnzbd.tls.certresolver=letsencrypt
+    - traefik.http.services.sabnzbd.loadbalancer.server.port=8080
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    restart: unless-stopped
+    environment:
+    - PUID=1000
+    - PGID=1000
+    - TZ=America/Chicago
+    volumes:
+    - ./config/prowlarr:/config
+    ports:
+    - 9696:9696
+    networks:
+    - arr_network
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.prowlarr.rule=Host(`prowlarr.nkhl.co.uk`)
+    - traefik.http.routers.prowlarr.entrypoints=websecure
+    - traefik.http.routers.prowlarr.tls.certresolver=letsencrypt
+    - traefik.http.services.prowlarr.loadbalancer.server.port=9696
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    environment:
+    - PUID=1000
+    - PGID=1000
+    - TZ=America/Chicago
+    volumes:
+    - ./config/sonarr:/config
+    - /mnt/truenas:/data:rshared
+    ports:
+    - 8989:8989
+    networks:
+    - arr_network
+    depends_on:
+    - sabnzbd
+    - prowlarr
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.sonarr.rule=Host(`sonarr.nkhl.co.uk`)
+    - traefik.http.routers.sonarr.entrypoints=websecure
+    - traefik.http.routers.sonarr.tls.certresolver=letsencrypt
+    - traefik.http.services.sonarr.loadbalancer.server.port=8989
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    environment:
+    - PUID=1000
+    - PGID=1000
+    - TZ=America/Chicago
+    volumes:
+    - ./config/radarr:/config
+    - /mnt/truenas:/data:rshared
+    ports:
+    - 7878:7878
+    networks:
+    - arr_network
+    depends_on:
+    - sabnzbd
+    - prowlarr
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.radarr.rule=Host(`radarr.nkhl.co.uk`)
+    - traefik.http.routers.radarr.entrypoints=websecure
+    - traefik.http.routers.radarr.tls.certresolver=letsencrypt
+    - traefik.http.services.radarr.loadbalancer.server.port=7878
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    restart: unless-stopped
+    environment:
+    - TZ=America/Chicago
+    volumes:
+    - ./config/jellyseerr:/app/config
+    ports:
+    - 5055:5055
+    networks:
+    - arr_network
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.nkhl.co.uk`)
+    - traefik.http.routers.jellyseerr.entrypoints=websecure
+    - traefik.http.routers.jellyseerr.tls.certresolver=letsencrypt
+    - traefik.http.services.jellyseerr.loadbalancer.server.port=5055
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: unless-stopped
+    environment:
+    - PUID=1000
+    - PGID=1000
+    - TZ=America/Chicago
+    volumes:
+    - ./config/bazarr:/config
+    - /mnt/truenas:/data:rshared
+    ports:
+    - 6767:6767
+    networks:
+    - arr_network
+    depends_on:
+    - sonarr
+    - radarr
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.bazarr.rule=Host(`bazarr.nkhl.co.uk`)
+    - traefik.http.routers.bazarr.entrypoints=websecure
+    - traefik.http.routers.bazarr.tls.certresolver=letsencrypt
+    - traefik.http.services.bazarr.loadbalancer.server.port=6767
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    environment:
+    - PUID=1000
+    - PGID=1000
+    - TZ=America/Chicago
+    volumes:
+    - ./config/jellyfin:/config
+    - /mnt/truenas:/data:rshared
+    ports:
+    - 8096:8096
+    networks:
+    - arr_network
+    depends_on:
+    - sonarr
+    - radarr
+  tdarr:
+    image: ghcr.io/haveagitgat/tdarr:latest
+    container_name: tdarr
+    restart: unless-stopped
+    environment:
+    - TZ=America/Chicago
+    - PUID=1000
+    - PGID=1000
+    - internalNode=true
+    - serverIP=0.0.0.0
+    - serverPort=8266
+    - webUIPort=8265
+    volumes:
+    - ./config/tdarr/server:/app/server
+    - ./config/tdarr/configs:/app/configs
+    - ./config/tdarr/logs:/app/logs
+    - /mnt/truenas:/media:rshared
+    - /opt/tdarr/transcode_cache:/temp
+    devices:
+    - /dev/dri:/dev/dri
+    group_add:
+    - "992"
+    ports:
+    - 8265:8265
+    - 8266:8266
+    networks:
+    - arr_network
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.tdarr.rule=Host(`tdarr.nkhl.co.uk`)
+    - traefik.http.routers.tdarr.entrypoints=websecure
+    - traefik.http.routers.tdarr.tls.certresolver=letsencrypt
+    - traefik.http.services.tdarr.loadbalancer.server.port=8265
+
+networks:
+  arr_network:
+    driver: bridge

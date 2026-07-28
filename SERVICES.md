@@ -1,5 +1,5 @@
 # Homelab Services
-Last Updated: 2026-07-23
+Last Updated: 2026-07-27
 
 ---
 
@@ -129,6 +129,7 @@ Last Updated: 2026-07-23
 | jellyseerr                 | fallenbagel/jellyseerr          | 5055   | Running |
 | bazarr                     | lscr.io/linuxserver/bazarr      | 6767   | Running |
 | glances                    | nicolargo/glances               | 61208  | Running |
+| tdarr                      | ghcr.io/haveagitgat/tdarr        | 8265,8266| Running |
 
 > **OpenBao note:** Auto-unseal configured via systemd timer (`openbao-unseal.timer`).
 > Single unseal key (1-of-1) stored at `/opt/openbao/config/unseal-key` on VM 103.
@@ -173,16 +174,16 @@ Last Updated: 2026-07-23
 
 ---
 
-### Debian13 (VM 102) — `192.168.1.133` *(Offline)*
+### Debian13 (VM 102) — `192.168.1.133`
 
 | Service      | Port  | Type         | Details                              |
 | :----------- | :---- | :----------- | :----------------------------------- |
-| —            | —     | —            | VM is offline due to NFS kernel hang |
+| —            | —     | —            | No active services — all migrated    |
 |              |       |              | Jellyfin migrated to ubuntu-docker   |
 
-> **Status (2026-07-20):** VM boots but hangs on NFS mount in `/etc/fstab`.
+> **Recovered (2026-07-26):** VM back online after removing conflicting GPU
+> passthrough and commenting out hung NFS mount in `/etc/fstab`.
 > All services previously on this host (Jellyfin, Docker) are now on VM 103.
-> See INFRASTRUCTURE.md for recovery steps.
 
 ~~Jellyfin~~ — migrated to ubuntu-docker (VM 103) as Docker container.
 
@@ -247,11 +248,19 @@ the library was created as wrong content type — delete and recreate as `tvshow
 
 | Service      | Port  | Type         | Details                              |
 | :----------- | :---- | :----------- | :----------------------------------- |
-| opencode     | —     | CLI          | AI agent (v1.18.4, Node.js 22)       |
+| opencode CLI | —     | CLI          | AI agent (v1.18.7, Node.js 22)       |
+| opencode Web | 4096  | HTTP         | Browser-based UI for iPad/remote     |
+| Orca Relay   | —     | Unix socket  | Orca Terminal SSH bridge (persistent)|
 | SSH          | 22    | SSH          | Key-based auth only (ED25519)        |
 
 #### Access
+- **Web UI:** `https://opencode.nkhl.co.uk` or `http://192.168.1.51:4096`
+  - Username: `admin` / Password: see SECRETS.md
+  - Systemd service: `opencode-web` (user, auto-start, linger enabled)
 - **SSH:** `ssh -i ~/.ssh/homelab_ubuntu_docker nkhan3@192.168.1.51`
+- **Orca Terminal:** Connect via SSH to `nkhan3@192.168.1.51` using Orca app (desktop/mobile)
+  - Systemd service: `orca-relay` (user, auto-start, linger enabled)
+  - Relay v0.1.0 at `~/.orca-remote/`
 - **HomeLab repo:** `/home/nkhan3/HomeLab/` — synced from GitHub (`noman-nkhl/HomeLab`)
 - **opencode config:** `/home/nkhan3/.config/opencode/` — 7 skills, opencode.jsonc
 - **Secrets:** `.env` + `SECRETS.md` copied to `/home/nkhan3/HomeLab/`
@@ -273,7 +282,7 @@ Power On
   └─► Router (192.168.1.1)           — ISP gateway, DHCP, always on
        ├─► Proxmox Host (1.200)       — boots VMs
        │    ├─► TrueNAS (1.218) VM100 — ZFS pool online, shares exported
-       │    ├─► Debian13 (1.133) VM102— OFFLINE (NFS hang, services migrated to VM 103)
+       │    ├─► Debian13 (1.133) VM102— Running (recovered 2026-07-26, no active services)
        │    ├─► ubuntu-docker (1.50) VM103 — Docker + Jellyfin + ARR Stack
        │    │    └─► Mount /mnt/truenas from TrueNAS (manual: sudo mount /mnt/truenas)
        │    └─► opencode (1.51) VM104 — AI agent CLI, Git synced with GitHub
@@ -303,7 +312,10 @@ After reboot, run `sudo mount /mnt/truenas` on VM 103 if media library is empty.
 | 5055   | ubuntu-docker (1.50)| Jellyseerr    | LAN only  |
 | 6767   | ubuntu-docker (1.50)| Bazarr        | LAN only  |
 | 61208  | ubuntu-docker (1.50)| Glances       | LAN only  |
+| 8265   | ubuntu-docker (1.50)| Tdarr Web UI   | LAN only  |
+| 8266   | ubuntu-docker (1.50)| Tdarr Node     | LAN only  |
 | 80,443 | ubuntu-docker (1.50)| Traefik       | LAN only  |
+| 4096   | opencode (1.51)     | opencode Web UI| LAN only  |
 | 53     | Pi (1.238)        | Pi-hole DNS     | LAN only  |
 | 80     | Pi (1.238)        | Pi-hole Admin   | LAN only  |
 

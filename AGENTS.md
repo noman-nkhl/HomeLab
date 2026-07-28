@@ -1,5 +1,5 @@
 # AGENTS.md — Homelab Context & Best Practices
-Last Updated: 2026-07-23
+Last Updated: 2026-07-27
 
 This file provides full context to AI agents managing this homelab. Read it
 before making any changes.
@@ -12,9 +12,10 @@ before making any changes.
 | :---------------- | :-------------- | :---------------------------- |
 | **Proxmox VE**    | 192.168.1.200   | `https://192.168.1.200:8006` |
 | **TrueNAS SCALE** | 192.168.1.218   | `https://192.168.1.218`      |
-| **Debian13**      | 192.168.1.133   | Offline — NFS mount hang         |
+| **Debian13**      | 192.168.1.133   | Running — no active services      |
 | **ubuntu-docker** | 192.168.1.50    | `https://192.168.1.50:9443`  |
-| **opencode**      | 192.168.1.51    | `ssh nkhan3@192.168.1.51`   |
+| **opencode**      | 192.168.1.51    | `https://opencode.nkhl.co.uk` or SSH |
+| **Orca Relay**    | 192.168.1.51    | Orca SSH bridge (auto-start on boot) |
 | **Traefik**       | 192.168.1.50    | `https://traefik.nkhl.co.uk` |
 | **Pi-hole**       | 192.168.1.238   | `http://192.168.1.238/admin` |
 |                    | Raspberry Pi    | Separate physical device      |
@@ -128,7 +129,7 @@ HomeLab/
 | VMID | Name     | OS              | vCPU | RAM  | IP              | Role            |
 | :--- | :------- | :-------------- | :--- | :--- | :-------------- | :-------------- |
 | 100  | TrueNAS  | SCALE 25.10.3.1 | 2    | 8GB  | 192.168.1.218   | NAS / Storage   |
-| 102  | Debian13 | Debian 13       | 2    | 2GB  | 192.168.1.133   | OFFLINE (NFS hang)        |
+| 102  | Debian13 | Debian 13       | 2    | 6GB  | 192.168.1.133   | Running (recovered 2026-07-26) |
 | 103  | ubuntu-docker | Ubuntu 24.04 | 8 | 12GB | 192.168.1.50    | Docker, Jellyfin, ARR, Portainer |
 | 104  | opencode | Ubuntu 24.04    | 1    | 2GB  | 192.168.1.51    | opencode AI agent (always-on access) |
 
@@ -251,8 +252,7 @@ qm start <NEW_VMID>
 1. **DO NOT delete/reallocate TrueNAS passthrough disks** (scsi1/scsi2 on VM 100).
    These are live ZFS pool members. Removal = total data loss.
 2. **Both VM 100 and VM 102 IPs are DHCP** — they could change on router/DHCP reboot.
-   VM 102 is currently offline (NFS mount hang on boot). VM 103 has a static IP
-   (192.168.1.50). No static reservations exist on the router.
+   VM 103 has a static IP (192.168.1.50). No static reservations exist on the router.
 3. **No backups anywhere** — no ZFS snapshots, no replication, no PBS.
    Any destructive action on TrueNAS is irreversible.
 4. **Pi-hole is single point of failure** — if 192.168.1.238 goes down,
@@ -276,14 +276,32 @@ qm start <NEW_VMID>
 - All VMs use `virtio-scsi-single` SCSI controller
 - VM 102 and VM 103 have QEMU guest agent enabled (`agent=1`)
 - VM 100 has NO guest agent — IP detection requires ARP table or TrueNAS API
-- **VM 102 is offline** — Jellyfin migrated to VM 103 as Docker container (2026-07-20)
+- **VM 102 recovered (2026-07-26)** — GPU passthrough removed (was conflicting with VM 103), NFS mount in fstab commented out. All services migrated to VM 103 on 2026-07-20. VM is running but has no active services.
 - **VM 103 media mount** — NFS at `/mnt/truenas`, requires manual mount after reboot: `sudo mount /mnt/truenas`
-- **VM 103 docker compose** — ARR stack at `/opt/arr-stack/docker-compose.yml` uses `:rshared` bind propagation
+- **VM 103 now uses OVMF (UEFI)** — converted from SeaBIOS on 2026-07-24. EFI disk at
+  `local-lvm:vm-103-disk-0`. The cloud image had dual BIOS/UEFI boot files pre-installed.
+- **VM 103 GPU passthrough** — Intel Arc A310 (DG2) at `0000:0b:00.0` + DG2 Audio at
+  `0000:0c:00.0`. i915 blacklisted on Proxmox host, bound to vfio-pci. GPU visible at
+  `/dev/dri/renderD128` inside VM 103. Intel iHD driver for QSV/VA-API encoding.
+- **Tdarr transcoding** — Runs as Docker container in the ARR stack. Media mounted at
+  `/media:rshared` (same pattern as ARR stack). GPU access via `/dev/dri:/dev/dri`.
+  Transcode cache at `/opt/tdarr/transcode_cache`. Web UI at `http://192.168.1.50:8265`
+  or `https://tdarr.nkhl.co.uk` via Traefik.
+  - Currently UNCONFIGURED — visit web UI to set up libraries and plugins.
+  - Target codec: HEVC/H.265 (QSV) recommended for broad device compatibility.
+  - Plugin stack: Re-order streams → Remux → QSV HEVC transcode → Size check → CPU decode verify.
 - **VM 103 SABnzbd downloads** — `/data/Movies/.usenet/incomplete` and `/data/Movies/.usenet/complete` (inside container)
 - **VM 103 Jellyseerr config** — Auto-approve enabled (perm=127). Sonarr: isDefault=true, root=/data/Shows, profile=6 (HD-720p/1080p). Radarr: isDefault=true, root=/data/Movies, profile=4 (HD-1080p). Jellyfin host: 192.168.1.50. Both Sonarr/Radarr quality profiles set upgradeAllowed=true, cutoff=WEB-1080p. Jellyseerr config at `/opt/arr-stack/config/jellyseerr/settings.json`.
 - The node's cluster API may report `192.168.0.200` (leftover from old subnet);
   the canonical IP is `192.168.1.200` on vmbr0
 - Storage `local-sata` is defunct — ignore any stale references
+- **VM 104 opencode web** — Systemd user service `opencode-web` runs on port 4096
+  with `--hostname 0.0.0.0`. Linger enabled so it persists across reboots.
+  Auth: `admin` / see OpenBao. Access via `https://opencode.nkhl.co.uk` (Traefik)
+  or `http://192.168.1.51:4096` (direct). Service auto-starts on boot.
+- **VM 104 Orca Relay** — Systemd user service `orca-relay` provides the Orca Terminal
+  SSH bridge (v0.1.0) via Unix socket. Linger enabled, auto-starts on boot.
+  Orca desktop/mobile clients connect via SSH to `nkhan3@192.168.1.51`.
 
 ---
 
@@ -294,7 +312,7 @@ qm start <NEW_VMID>
 - **SSL:** Let's Encrypt wildcard (`*.nkhl.co.uk`) via Cloudflare DNS-01 challenge
 - **Config:** Static (`traefik.yml`) + dynamic (`config.yml`) — file provider only
 - **DNS:** Cloudflare manages `nkhl.co.uk` zone. Wildcard A record `*.nkhl.co.uk` → `192.168.1.50` + root `nkhl.co.uk` → `192.168.1.50`. All clients should use public DNS (1.1.1.1, 8.8.8.8) — Pi-hole local records are no longer used for subdomains.
-- **Architecture:** All 15 services proxied via File provider using `host.docker.internal:PORT` (for Docker containers) or direct IP (for external hosts)
+- **Architecture:** All 17 services proxied via File provider using `host.docker.internal:PORT` (for Docker containers) or direct IP (for external hosts)
 - **Direct IP access:** Still works — all ports remain exposed on the host
 - **Cert renew:** Automatic — Traefik handles Let's Encrypt renewal (every 60 days)
 
@@ -304,6 +322,7 @@ qm start <NEW_VMID>
 | `traefik.nkhl.co.uk` | Traefik Dashboard |
 | `portainer.nkhl.co.uk` | 192.168.1.50:9443 |
 | `openbao.nkhl.co.uk` | 192.168.1.50:8200 |
+| `opencode.nkhl.co.uk` | 192.168.1.51:4096 |
 | `code.nkhl.co.uk` | 192.168.1.50:8443 |
 | `sabnzbd.nkhl.co.uk` | 192.168.1.50:8080 |
 | `prowlarr.nkhl.co.uk` | 192.168.1.50:9696 |
@@ -315,6 +334,7 @@ qm start <NEW_VMID>
 | `truenas.nkhl.co.uk` | 192.168.1.218:443 |
 | `proxmox.nkhl.co.uk` | 192.168.1.200:8006 |
 | `pihole.nkhl.co.uk` | 192.168.1.238:80 |
+| `tdarr.nkhl.co.uk` | 192.168.1.50:8265 |
 
 ### Pi-hole API (v6)
 - **Base URL:** `http://192.168.1.238/api`

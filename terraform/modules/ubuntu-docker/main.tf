@@ -83,6 +83,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_docker" {
       initialization,
       disk,
       started,
+      hostpci,
     ]
   }
 }
