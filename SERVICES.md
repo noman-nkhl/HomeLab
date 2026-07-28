@@ -1,5 +1,5 @@
 # Homelab Services
-Last Updated: 2026-07-27
+Last Updated: 2026-07-28
 
 ---
 
@@ -164,6 +164,8 @@ Last Updated: 2026-07-27
 - **ARR Stack:** `/opt/arr-stack/docker-compose.yml` (sabnzbd, prowlarr, sonarr, radarr, jellyseerr, bazarr, jellyfin)
 - **Traefik:** `/opt/traefik/docker-compose.yml`
 - **Config data:** `/opt/arr-stack/config/<service>/`
+- **OpenBao:** `/opt/openbao/` — auto-unseal script, Raft data, config
+- **Tdarr:** `/opt/tdarr/` — transcode cache
 
 #### Jellyseerr Configuration (authoritative)
 - **Auto-approve:** Enabled (defaultPermissions=127 — TV + Movies)
@@ -282,7 +284,7 @@ Power On
   └─► Router (192.168.1.1)           — ISP gateway, DHCP, always on
        ├─► Proxmox Host (1.200)       — boots VMs
        │    ├─► TrueNAS (1.218) VM100 — ZFS pool online, shares exported
-       │    ├─► Debian13 (1.133) VM102— Running (recovered 2026-07-26, no active services)
+       │    ├─► Debian13 (1.133) VM102— Stopped (no active services)
        │    ├─► ubuntu-docker (1.50) VM103 — Docker + Jellyfin + ARR Stack
        │    │    └─► Mount /mnt/truenas from TrueNAS (manual: sudo mount /mnt/truenas)
        │    └─► opencode (1.51) VM104 — AI agent CLI, Git synced with GitHub
@@ -314,6 +316,7 @@ After reboot, run `sudo mount /mnt/truenas` on VM 103 if media library is empty.
 | 61208  | ubuntu-docker (1.50)| Glances       | LAN only  |
 | 8265   | ubuntu-docker (1.50)| Tdarr Web UI   | LAN only  |
 | 8266   | ubuntu-docker (1.50)| Tdarr Node     | LAN only  |
+| 8443   | ubuntu-docker (1.50)| code-server    | LAN only  |
 | 80,443 | ubuntu-docker (1.50)| Traefik       | LAN only  |
 | 4096   | opencode (1.51)     | opencode Web UI| LAN only  |
 | 53     | Pi (1.238)        | Pi-hole DNS     | LAN only  |

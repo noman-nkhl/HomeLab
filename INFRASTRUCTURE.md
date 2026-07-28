@@ -1,5 +1,5 @@
 # Homelab Infrastructure Overview
-Last Updated: 2026-07-24
+Last Updated: 2026-07-28
 
 ---
 
@@ -25,7 +25,7 @@ Last Updated: 2026-07-24
 | **Node**       | `local` (nodeid: 0)                     |
 | **Cluster**    | Single-node                             |
 | **Status**     | Online                                  |
-| **Uptime**     | ~8.3 hours (29,860s at snapshot)           |
+| **Uptime**     | Varies (check via API)                   |
 | **API Base**   | `https://192.168.1.200:8006/api2/json`  |
 | **Token ID**   | `root@pam!gemini-cli`                   |
 
@@ -36,7 +36,7 @@ Last Updated: 2026-07-24
 | Resource      | Total / Max    | Current Usage        |
 | :------------ | :------------- | :------------------- |
 | **CPU**       | 24 vCPUs       | ~0% (idle at snapshot)|
-| **RAM**       | 31.25 GiB      | ~14 GiB allocated to VMs |
+| **RAM**       | 62.7 GiB       | ~22 GiB allocated to VMs (24 GiB max with all VMs running) |
 | **Disk**      | —              | ~15.8 GiB (see Storage) |
 
 ---
@@ -209,7 +209,7 @@ No SDN Zones or VNets are configured (empty from API).
 ### VM 102 — Debian13
 | Field             | Value                                                    |
 | :---------------- | :------------------------------------------------------- |
-| **Status**        | Running                                                  |
+| **Status**        | Stopped (recovered 2026-07-26, intentionally off)         |
 | **IP**            | 192.168.1.133 (DHCP)                                     |
 | **OS**            | Debian 13 (Trixie)                                       |
 | **Access**         | SSH: `nkhan` (password in SECRETS.md)                   |

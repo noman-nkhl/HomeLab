@@ -1,5 +1,5 @@
 # AGENTS.md — Homelab Context & Best Practices
-Last Updated: 2026-07-27
+Last Updated: 2026-07-28
 
 This file provides full context to AI agents managing this homelab. Read it
 before making any changes.
@@ -12,7 +12,7 @@ before making any changes.
 | :---------------- | :-------------- | :---------------------------- |
 | **Proxmox VE**    | 192.168.1.200   | `https://192.168.1.200:8006` |
 | **TrueNAS SCALE** | 192.168.1.218   | `https://192.168.1.218`      |
-| **Debian13**      | 192.168.1.133   | Running — no active services      |
+| **Debian13**      | 192.168.1.133   | Stopped — no active services      |
 | **ubuntu-docker** | 192.168.1.50    | `https://192.168.1.50:9443`  |
 | **opencode**      | 192.168.1.51    | `https://opencode.nkhl.co.uk` or SSH |
 | **Orca Relay**    | 192.168.1.51    | Orca SSH bridge (auto-start on boot) |
@@ -118,7 +118,7 @@ HomeLab/
 ## Infrastructure Summary
 
 ### Hypervisor: Proxmox VE 9.0.3
-- Single node `local` — 24 vCPUs, 32 GiB RAM
+- Single node `local` — 24 vCPUs, ~64 GiB RAM
 - API: `https://192.168.1.200:8006/api2/json`
 - Two API tokens in `.env`:
   - `PROXMOX_TOKEN_*` — general use (`root@pam!gemini-cli`)
@@ -129,7 +129,7 @@ HomeLab/
 | VMID | Name     | OS              | vCPU | RAM  | IP              | Role            |
 | :--- | :------- | :-------------- | :--- | :--- | :-------------- | :-------------- |
 | 100  | TrueNAS  | SCALE 25.10.3.1 | 2    | 8GB  | 192.168.1.218   | NAS / Storage   |
-| 102  | Debian13 | Debian 13       | 2    | 6GB  | 192.168.1.133   | Running (recovered 2026-07-26) |
+| 102  | Debian13 | Debian 13       | 2    | 6GB  | 192.168.1.133   | Stopped — no active services      |
 | 103  | ubuntu-docker | Ubuntu 24.04 | 8 | 12GB | 192.168.1.50    | Docker, Jellyfin, ARR, Portainer |
 | 104  | opencode | Ubuntu 24.04    | 1    | 2GB  | 192.168.1.51    | opencode AI agent (always-on access) |
 
@@ -276,7 +276,7 @@ qm start <NEW_VMID>
 - All VMs use `virtio-scsi-single` SCSI controller
 - VM 102 and VM 103 have QEMU guest agent enabled (`agent=1`)
 - VM 100 has NO guest agent — IP detection requires ARP table or TrueNAS API
-- **VM 102 recovered (2026-07-26)** — GPU passthrough removed (was conflicting with VM 103), NFS mount in fstab commented out. All services migrated to VM 103 on 2026-07-20. VM is running but has no active services.
+- **VM 102 recovered (2026-07-26)** — GPU passthrough removed (was conflicting with VM 103), NFS mount in fstab commented out. All services migrated to VM 103 on 2026-07-20. VM is stopped and has no active services.
 - **VM 103 media mount** — NFS at `/mnt/truenas`, requires manual mount after reboot: `sudo mount /mnt/truenas`
 - **VM 103 now uses OVMF (UEFI)** — converted from SeaBIOS on 2026-07-24. EFI disk at
   `local-lvm:vm-103-disk-0`. The cloud image had dual BIOS/UEFI boot files pre-installed.
@@ -312,7 +312,7 @@ qm start <NEW_VMID>
 - **SSL:** Let's Encrypt wildcard (`*.nkhl.co.uk`) via Cloudflare DNS-01 challenge
 - **Config:** Static (`traefik.yml`) + dynamic (`config.yml`) — file provider only
 - **DNS:** Cloudflare manages `nkhl.co.uk` zone. Wildcard A record `*.nkhl.co.uk` → `192.168.1.50` + root `nkhl.co.uk` → `192.168.1.50`. All clients should use public DNS (1.1.1.1, 8.8.8.8) — Pi-hole local records are no longer used for subdomains.
-- **Architecture:** All 17 services proxied via File provider using `host.docker.internal:PORT` (for Docker containers) or direct IP (for external hosts)
+- **Architecture:** All 16 services proxied via File provider using `host.docker.internal:PORT` (for Docker containers) or direct IP (for external hosts)
 - **Direct IP access:** Still works — all ports remain exposed on the host
 - **Cert renew:** Automatic — Traefik handles Let's Encrypt renewal (every 60 days)
 
